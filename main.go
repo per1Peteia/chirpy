@@ -15,22 +15,36 @@ import (
 type apiConfig struct {
 	dbQueries      *database.Queries
 	fileserverHits atomic.Int32
+	platform       string
 }
 
 func main() {
 	// load .env into my environment variables
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	godotenv.Load()
+
+	// check environmental variables
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL must be set")
+	}
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		log.Fatal("PLATFORM must be set")
 	}
 
 	// open connection to database
-	dbURL := os.Getenv("DB_URL")
 	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("error opening database")
+	}
 
 	// store queries code in config so handlers can access it
 	dbQueries := database.New(db)
-	apiCfg := &apiConfig{dbQueries: dbQueries}
+	apiCfg := &apiConfig{
+		fileserverHits: atomic.Int32{},
+		dbQueries:      dbQueries,
+		platform:       platform,
+	}
 
 	const filepathRoot = "."
 	const port = "8080"
@@ -44,15 +58,16 @@ func main() {
 
 	fileServer := apiCfg.middlewareMetricsInc(http.FileServer(http.Dir(filepathRoot)))
 
+	// handlers
 	mux.Handle("/app/", http.StripPrefix("/app", fileServer))
 
 	mux.HandleFunc("GET /api/healthz", readinessHandler)
 
 	mux.HandleFunc("GET /admin/metrics", apiCfg.srvHitsHandler)
 
-	mux.HandleFunc("POST /admin/reset", apiCfg.resetSrvHitsHandler)
+	mux.HandleFunc("POST /admin/reset", apiCfg.resetHandler)
 
-	mux.HandleFunc("POST /api/validate_chirp", apiCfg.validateChirpHandler)
+	mux.HandleFunc("POST /api/chirps", apiCfg.chirpHandler)
 
 	mux.HandleFunc("POST /api/users", apiCfg.createUserHandler)
 
