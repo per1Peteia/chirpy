@@ -19,13 +19,13 @@ type tagChirp struct {
 }
 
 // validate chirps logic (checks for bad words)
-// save chirps if valid logic
+// save chirps if valid
 var filter = []string{"kerfuffle", "sharbert", "fornax"}
 
 func (cfg *apiConfig) chirpHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Body   string `json:"body"`
-		UserID string `json:"user_id"`
+		Body   string    `json:"body"`
+		UserID uuid.UUID `json:"user_id"`
 	}
 
 	type returnVals struct {
@@ -40,6 +40,7 @@ func (cfg *apiConfig) chirpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validate length
 	if len(params.Body) > 140 {
 		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
 		return
@@ -47,15 +48,10 @@ func (cfg *apiConfig) chirpHandler(w http.ResponseWriter, r *http.Request) {
 
 	// cleanBody will either evaluate to a clean string or a cleaned string
 	cleanBody := dirtyChirp(params.Body, filter)
-	parsedUserID, err := uuid.Parse(params.UserID)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "error parsing json into uuid")
-		return
-	}
 
 	chirp, err := cfg.dbQueries.CreateValidChirp(r.Context(), database.CreateValidChirpParams{
 		Body:   cleanBody,
-		UserID: parsedUserID,
+		UserID: params.UserID,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "error creating chirp record")
