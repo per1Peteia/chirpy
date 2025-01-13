@@ -71,7 +71,11 @@ func main() {
 
 	mux.HandleFunc("GET /api/chirps", apiCfg.getAllChirpsHandler)
 
+	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.getChirpByIDHandler)
+
 	mux.HandleFunc("POST /api/users", apiCfg.createUserHandler)
+
+	mux.HandleFunc("POST /api/login", apiCfg.loginHandler)
 
 	log.Printf("serving files from %s on port: %s", filepathRoot, port)
 	log.Fatal(srv.ListenAndServe())
