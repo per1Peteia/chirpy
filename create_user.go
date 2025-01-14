@@ -2,12 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"net/http"
-	"time"
-
 	"github.com/google/uuid"
 	"github.com/per1Peteia/chirpy/internal/auth"
 	"github.com/per1Peteia/chirpy/internal/database"
+	"net/http"
+	"time"
 )
 
 type taggedUser struct {

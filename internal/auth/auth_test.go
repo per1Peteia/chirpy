@@ -1,10 +1,25 @@
 package auth
 
 import (
-	"github.com/google/uuid"
+	"net/http"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
 )
+
+func TestGetBearerToken(t *testing.T) {
+	tokenString := "TOKEN_STRING"
+	testHeader := http.Header{}
+	testHeader.Add("Authorization", "Bearer TOKEN_STRING")
+	validString, err := GetBearerToken(testHeader)
+	if err != nil {
+		t.Errorf("error GetBearerToken")
+	}
+	if validString != tokenString {
+		t.Errorf("error GetBearerToken: %v != %v", validString, tokenString)
+	}
+}
 
 func TestValidateJWT(t *testing.T) {
 	userID := uuid.New()

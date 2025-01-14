@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/per1Peteia/chirpy/internal/auth"
 	"github.com/per1Peteia/chirpy/internal/database"
 )
 
@@ -24,17 +25,27 @@ var filter = []string{"kerfuffle", "sharbert", "fornax"}
 
 func (cfg *apiConfig) chirpHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Body   string    `json:"body"`
-		UserID uuid.UUID `json:"user_id"`
+		Body string `json:"body"`
 	}
 
 	type returnVals struct {
 		tagChirp
 	}
 
+	tokenString, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "error getting bearer token")
+		return
+	}
+
+	userID, err := auth.ValidateJWT(tokenString, cfg.secret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "error validating JWT")
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "error decoding parameters")
 		return
@@ -51,7 +62,7 @@ func (cfg *apiConfig) chirpHandler(w http.ResponseWriter, r *http.Request) {
 
 	chirp, err := cfg.dbQueries.CreateValidChirp(r.Context(), database.CreateValidChirpParams{
 		Body:   cleanBody,
-		UserID: params.UserID,
+		UserID: userID,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "error creating chirp record")

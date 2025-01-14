@@ -16,6 +16,7 @@ type apiConfig struct {
 	dbQueries      *database.Queries
 	fileserverHits atomic.Int32
 	platform       string
+	secret         string
 }
 
 func main() {
@@ -31,6 +32,7 @@ func main() {
 	if platform == "" {
 		log.Fatal("PLATFORM must be set")
 	}
+	secret := os.Getenv("SECRET")
 
 	// open connection to database
 	db, err := sql.Open("postgres", dbURL)
@@ -44,6 +46,7 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		dbQueries:      dbQueries,
 		platform:       platform,
+		secret:         secret,
 	}
 
 	const filepathRoot = "."
@@ -76,6 +79,10 @@ func main() {
 	mux.HandleFunc("POST /api/users", apiCfg.createUserHandler)
 
 	mux.HandleFunc("POST /api/login", apiCfg.loginHandler)
+
+	mux.HandleFunc("POST /api/refresh", apiCfg.refreshHandler)
+
+	mux.HandleFunc("POST /api/revoke", apiCfg.revokeHandler)
 
 	log.Printf("serving files from %s on port: %s", filepathRoot, port)
 	log.Fatal(srv.ListenAndServe())
