@@ -2,7 +2,7 @@ package main
 
 import "net/http"
 
-func (cfg *apiConfig) resetHandler(w http.ResponseWriter, req *http.Request) {
+func (cfg *apiConfig) resetUsersHandler(w http.ResponseWriter, req *http.Request) {
 	if cfg.platform != "dev" {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("reset is only allowed in dev environement"))
