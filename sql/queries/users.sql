@@ -15,3 +15,15 @@ FROM
 WHERE
     email = $1;
 
+-- name: UpdateUserCreds :one
+UPDATE
+    users
+SET
+    hashed_password = $1,
+    email = $2,
+    updated_at = now()
+WHERE
+    id = $3
+RETURNING
+    *;
+

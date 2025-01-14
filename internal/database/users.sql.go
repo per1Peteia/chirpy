@@ -7,6 +7,8 @@ package database
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -63,4 +65,36 @@ DELETE FROM users
 func (q *Queries) ResetUsers(ctx context.Context) error {
 	_, err := q.db.ExecContext(ctx, resetUsers)
 	return err
+}
+
+const updateUserCreds = `-- name: UpdateUserCreds :one
+UPDATE
+    users
+SET
+    hashed_password = $1,
+    email = $2,
+    updated_at = now()
+WHERE
+    id = $3
+RETURNING
+    id, created_at, updated_at, email, hashed_password
+`
+
+type UpdateUserCredsParams struct {
+	HashedPassword string
+	Email          string
+	ID             uuid.UUID
+}
+
+func (q *Queries) UpdateUserCreds(ctx context.Context, arg UpdateUserCredsParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUserCreds, arg.HashedPassword, arg.Email, arg.ID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.HashedPassword,
+	)
+	return i, err
 }
