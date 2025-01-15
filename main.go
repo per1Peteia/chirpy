@@ -88,6 +88,8 @@ func main() {
 
 	mux.HandleFunc("POST /api/revoke", apiCfg.revokeHandler)
 
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.userUpgradeHandler)
+
 	log.Printf("serving files from %s on port: %s", filepathRoot, port)
 	log.Fatal(srv.ListenAndServe())
 }

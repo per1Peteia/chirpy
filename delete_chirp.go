@@ -1,10 +1,9 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/google/uuid"
 	"github.com/per1Peteia/chirpy/internal/auth"
+	"net/http"
 )
 
 func (cfg *apiConfig) deleteChirpHandler(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +38,7 @@ func (cfg *apiConfig) deleteChirpHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// deleting
 	err = cfg.dbQueries.DeleteChirpByID(r.Context(), parsedID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "error deleting chirp record")
