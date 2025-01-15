@@ -17,6 +17,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	platform       string
 	secret         string
+	polka          string
 }
 
 func main() {
@@ -33,6 +34,10 @@ func main() {
 		log.Fatal("PLATFORM must be set")
 	}
 	secret := os.Getenv("SECRET")
+	polka_key := os.Getenv("POLKA_KEY")
+	if polka_key == "" {
+		log.Fatal("api key must be set")
+	}
 
 	// open connection to database
 	db, err := sql.Open("postgres", dbURL)
@@ -47,6 +52,7 @@ func main() {
 		dbQueries:      dbQueries,
 		platform:       platform,
 		secret:         secret,
+		polka:          polka_key,
 	}
 
 	const filepathRoot = "."
